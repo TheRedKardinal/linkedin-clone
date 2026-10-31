@@ -1,133 +1,84 @@
-# LinkedIn Clone 🔗
+# LinkedIn Clone
 
-Un clone di **LinkedIn** costruito come progetto di gruppo (Epicode).
-Front-end in **React + TypeScript** (con Vite), stato gestito con **Redux Toolkit**,
-e **Firebase** come backend (database, accesso e archiviazione file).
+A LinkedIn-inspired social network built in one week by a team of five during the Epicode Full-Stack Developer course (Build Week 3).
 
-> Vuoi capire l'app nel dettaglio, file per file? C'è la **Guida completa** in PDF
-> con anche i puntatori al codice. Questo README è la versione veloce. 😊
+Users can sign up, publish and manage posts, comment and like, build their network, receive real-time notifications and chat with AI-powered contacts — all wrapped in a switchable theme system.
 
----
+<!-- Add a screenshot or GIF of the home feed here, e.g. ![Home feed](docs/home.png) -->
 
-## 🚀 Come si avvia
+## Features
 
-```bash
-npm install        # installa le dipendenze
-npm run dev        # avvia l'app su http://localhost:5173
-```
+- **Authentication** with Firebase Auth: sign up, login, persistent session, protected routes
+- **Feed** with full post CRUD, image upload, likes ("Consiglia") and comments
+- **Profile**: personal page, editable profile, work experience, other users' profiles
+- **Network**: connection requests, accept/decline, list of connections
+- **Real-time notifications** for likes, comments and invites (Firestore `onSnapshot` listener)
+- **AI messaging**: chat drawer with three contacts, each with its own personality, powered by an LLM (Groq API, Llama 3.1)
+- **News** section fed by the NewsData API
+- **Theme system**: light/dark mode plus five brand themes (default, villain, fantasy, cyberpunk, horror) with custom logos and GSAP animations
+- **Security rules** on Firestore: only authors can edit or delete their posts, any signed-in user can toggle likes
 
-Serve un file **`.env`** nella cartella del progetto con le chiavi (senza, l'app
-parte ma non legge i dati / la chat non risponde):
+## Tech stack
 
-```
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=...
-VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_STORAGE_BUCKET=...
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
-VITE_GROQ_API_KEY=...        # per la chat AI
-VITE_NEWSDATA_API_KEY=...    # per le notizie
-```
+| Area | Technologies |
+|---|---|
+| Frontend | React 19, TypeScript, Vite, React Router |
+| State | Redux Toolkit (feature slices, async thunks, typed hooks) |
+| UI | React Bootstrap, Bootstrap Icons, GSAP |
+| Backend as a service | Firebase Authentication, Cloud Firestore |
+| External APIs | Groq (LLM chat), NewsData (news) |
 
-Non serve nessun backend locale: è tutto su Firebase.
+## Project structure
 
----
-
-## ✨ Cosa si può fare (le funzioni principali)
-
-- **🔐 Accedere e registrarsi** — con email e password, tramite Firebase Auth.
-  La sessione resta anche dopo un refresh.
-  _`features/auth/authSlice.ts` → `loginUser`, `registerUser`_
-
-- **👤 Profilo** — il tuo e quello degli altri (stessa pagina, cambia l'URL).
-  Puoi modificare nome, titolo e **foto**, e aggiungere le tue **esperienze** lavorative.
-  _`features/profile/profileSlice.ts` → `updateProfile`, `addExperience`_
-
-- **📝 Feed e post** — pubblica testo, **foto** e **video**; metti "Consiglia",
-  commenta, **diffondi** (repost) e **invia** (condividi il link del post).
-  _`features/posts/postsSlice.ts` → `createPost`, `toggleLike`, `addComment`, `repostPost`_
-
-- **🤝 La mia rete** — invia richieste di collegamento, accettale o rifiutale,
-  guarda i suggerimenti.
-  _`features/network/networkSlice.ts` → `sendRequest`, `acceptRequest`, `removeConnection`_
-
-- **🔔 Notifiche in tempo reale** — like, commenti e inviti arrivano subito sulla
-  campanella, senza ricaricare la pagina.
-  _`features/notification/useNotificationsListener.ts` + `sendNotification.ts`_
-
-- **🔎 Ricerca** — cerca le persone dalla barra in alto e vai al loro profilo.
-  _`components/navbar/Searchbar.tsx`_
-
-- **💬 Chat AI** — tre contatti (Pippo, Pluta, Paperino) che rispondono davvero,
-  grazie a un modello di intelligenza artificiale (Groq / Llama 3).
-  _`features/messaging/data/messagingSlice.ts` → `fetchAIReply`_
-
-- **💼 Lavoro e 📰 Notizie** — offerte di lavoro reali (API Remotive) e notizie
-  (API NewsData).
-  _`features/jobs/jobsApi.ts`, `features/news/newsApi.ts`_
-
-- **🎨 Temi** — modalità **chiara/scura** più **5 temi a sorpresa**
-  (default, villain, fantasy, cyberpunk, horror). Si sbloccano con **5 click sul logo**!
-  _`features/theme/`_
-
-> Per rendere l'app "viva" anche in pochi, ci sono utenti e post **finti** presi da
-> DummyJSON: hanno un id che inizia con `dummy-` e non vengono mai salvati sul database.
-
----
-
-## 🧱 Com'è fatto (stack)
-
-| Cosa | Strumento |
-|------|-----------|
-| Interfaccia | React + TypeScript |
-| Build / dev server | Vite |
-| Stato globale | Redux Toolkit (+ RTK Query per news e lavori) |
-| Navigazione | React Router |
-| Grafica | React-Bootstrap |
-| Backend | Firebase — Firestore (dati), Auth (accesso), Storage (video) |
-
----
-
-## 📁 Struttura del progetto
+Feature-based organization: each feature owns its slice, components and logic.
 
 ```
 src/
-├─ app/          → store Redux e hook
-├─ pages/        → le pagine (Home, Login, Network, Post, Messaging…)
-├─ features/     → una cartella per funzionalità:
-│  ├─ auth/          accesso
-│  ├─ posts/         feed e post
-│  ├─ profile/       profilo ed esperienze
-│  ├─ network/       collegamenti
-│  ├─ notification/  notifiche
-│  ├─ messaging/     chat AI
-│  ├─ jobs/          offerte di lavoro
-│  ├─ news/          notizie
-│  └─ theme/         temi ed effetti
-├─ components/   → pezzi condivisi (Navbar, Avatar, ProfileCard…)
-└─ types/        → i tipi condivisi (User, Post, Connection…)
+├── app/          # Redux store and typed hooks
+├── features/
+│   ├── auth/         # auth slice, login/register, route guards
+│   ├── posts/        # feed, post CRUD, comments, likes
+│   ├── profile/      # profile page, edit profile, experiences
+│   ├── network/      # connections and invites
+│   ├── notification/ # real-time notifications
+│   ├── messaging/    # AI chat drawer
+│   ├── news/         # news section
+│   └── theme/        # brand themes and effects
+├── components/   # navbar, cards, shared UI
+├── pages/        # routed pages
+└── firebase.ts   # Firebase initialization
 ```
 
----
-
-## 📜 Comandi utili
+## Getting started
 
 ```bash
-npm run dev      # sviluppo
-npm run build    # build di produzione
-npm run lint     # controllo del codice
+npm install
+cp .env.example .env   # then fill in your Firebase, Groq and NewsData keys
+npm run dev
 ```
 
----
+The app needs a Firebase project with Authentication (email/password) and Firestore enabled. Security rules and indexes are in `firestore.rules` and `firestore.indexes.json`.
 
-## ⚠️ Buono a sapersi
+## Team workflow
 
-- Le **regole di Firestore** (`firestore.rules`) e **Storage** vanno **deployate** su
-  Firebase, altrimenti alcune scritture (es. esperienze, upload video) possono fallire.
-- I **contenuti finti** (dummy) vivono solo in memoria: spariscono a ogni refresh.
-- Chi aggiorna il progetto da git deve rifare **`npm install`** se sono cambiate le dipendenze.
+The project was developed like a real team project:
 
----
+- `main` protected, updated only through pull requests at milestones
+- `develop` as the integration branch, one branch per feature
+- every pull request reviewed by at least one teammate
+- conventional commit prefixes (`feat:`, `fix:`, `chore:`)
+- one owner per feature, shared files (types, store) changed only after notifying the team
 
-_Progetto di gruppo — Epicode Full Stack. Buon divertimento! 🎉_
+## Team
+
+- Angelo Cozzula — setup, store and integration (repo owner, PR reviews)
+- Cristian Nunez Jorge
+- Alberto Razzolini
+- Javier
+- **Claudio Giasi** ([@TheRedKardinal](https://github.com/TheRedKardinal))
+
+### My contribution
+
+- **Migration from a mock backend (json-server + localStorage) to Firebase**: Firebase setup, Firebase Auth integration in the auth slice, session handling and route guards (`ProtectedRoute`, `RedirectIfAuth`), posts persisted on Firestore
+- **Firestore security rules** and indexes
+- Layout fixes on profile, edit profile and network pages; avatar rendering fixes
