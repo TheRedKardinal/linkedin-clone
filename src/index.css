@@ -1,111 +1,894 @@
+/* ============================================================
+   Sistema temi brandizzati — easter egg: 5 click sul logo in navbar
+   apre il selettore. Ogni tema ridefinisce le stesse variabili
+   Bootstrap per chiaro/scuro, così bg-primary, text-primary,
+   bg-primary-subtle, i link e i bottoni si aggiornano ovunque senza
+   toccare i singoli componenti. Vedi src/features/theme/themeConfig.ts
+   per l'elenco temi e le icone associate.
+   ============================================================ */
+
+/* Sfondo di base per tema default e per le varianti "chiaro": grigio caldo,
+   più riposante del whitesmoke. In scuro viene sovrascritto qui sotto. */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --bs-body-bg: #f3f2ef;
+}
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+/* Tema default in scuro: le superfici (card, .bg-body) su un grigio scuro
+   morbido, non nero puro, come fanno gli altri temi. */
+[data-brand-theme="default"][data-bs-theme="dark"] {
+  --bs-body-bg: #1b1f23;
+}
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ...e la PAGINA (body) ancora più scura delle card, per dare profondità come
+   su LinkedIn. Vincolato a [data-brand-theme="default"]: i temi brand hanno il
+   proprio sfondo e non vengono toccati. */
+[data-brand-theme="default"][data-bs-theme="dark"] body {
+  background-color: #15171c;
+}
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+/* Riserva sempre lo spazio della scrollbar verticale: senza, le pagine corte
+   risultano più larghe di quelle con scroll (il Container si ricentra). */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Card profilo "appiccicata" durante lo scroll, solo da lg in su (sotto, le
+   colonne si impilano e non avrebbe senso fissarla). */
+@media (min-width: 992px) {
+  .sticky-sidebar {
+    position: sticky;
+    top: 80px;
+    align-self: flex-start;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+/* Colonne della Home: larghezze in pixel calibrate sulle proporzioni reali di
+   LinkedIn, invece delle sole frazioni della griglia Bootstrap. */
+@media (min-width: 992px) {
+  .home-col-profile {
+    flex: 0 0 235px;
+    max-width: 235px;
   }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+  .home-col-feed {
+    flex: 1 1 0%;
+    max-width: none;
+  }
+
+  .home-col-news {
+    flex: 0 0 310px;
+    max-width: 310px;
   }
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
+/* Linea sotto la voce attiva della navbar (Home, La mia rete, ...):
+   currentColor segue il colore già usato dallo stato "active" di ciascun tema. */
+.nav-link-item {
+  position: relative;
+}
+
+.nav-link-item.active::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: -6px;
+  height: 2px;
+  border-radius: 1px;
+  background-color: currentColor;
+}
+
+/* Finestra messaggistica: al primo montaggio (login) "sale" da sotto il
+   bordo inferiore invece di comparire di scatto già in posizione. */
+.messaging-drawer {
+  animation: messaging-drawer-rise 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes messaging-drawer-rise {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Corpo della chat: montato/smontato da React ad ogni click sulla barra
+   "Messaggi" (toggleMinimize), quindi anima ad ogni apertura, non solo al
+   login. Cresce in altezza dal basso verso l'alto: il contenitore fisso
+   resta ancorato a bottom-0, quindi il pannello sembra "sollevarsi" sopra
+   la barra invece di comparire di colpo. */
+.messaging-drawer-body {
+  overflow: hidden;
+  animation: messaging-drawer-body-rise 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes messaging-drawer-body-rise {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: 400px;
+    opacity: 1;
+  }
+}
+
+/* ---------- ex-Villain: rosso/nero minaccioso ---------- */
+[data-brand-theme="villain"][data-bs-theme="light"] {
+  --bs-primary: #c1121f;
+  --bs-primary-rgb: 193, 18, 31;
+  --bs-primary-text-emphasis: #6b0710;
+  --bs-primary-bg-subtle: #f6dade;
+  --bs-primary-border-subtle: #e3a3a8;
+  --bs-link-color: #c1121f;
+  --bs-link-color-rgb: 193, 18, 31;
+  --bs-link-hover-color: #8f0d17;
+  --bs-link-hover-color-rgb: 143, 13, 23;
+}
+
+[data-brand-theme="villain"][data-bs-theme="dark"] {
+  --bs-primary: #e5383b;
+  --bs-primary-rgb: 229, 56, 59;
+  --bs-primary-text-emphasis: #ff8a94;
+  --bs-primary-bg-subtle: #2a0a0d;
+  --bs-primary-border-subtle: #5c1218;
+  --bs-link-color: #ff8a94;
+  --bs-link-color-rgb: 255, 138, 148;
+  --bs-link-hover-color: #ffb3ba;
+  --bs-link-hover-color-rgb: 255, 179, 186;
+  --bs-body-bg: #0d0d0d;
+}
+
+[data-brand-theme="villain"] .btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #c1121f;
+  --bs-btn-border-color: #c1121f;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #8f0d17;
+  --bs-btn-hover-border-color: #8f0d17;
+  --bs-btn-focus-shadow-rgb: 193, 18, 31;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #8f0d17;
+  --bs-btn-active-border-color: #7a0b13;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #c1121f;
+  --bs-btn-disabled-border-color: #c1121f;
+}
+
+[data-brand-theme="villain"] .form-control:focus {
+  border-color: #e5383b;
+  box-shadow: 0 0 0 0.25rem rgba(193, 18, 31, 0.25);
+}
+
+[data-brand-theme="villain"] .notification-item:hover {
+  background-color: #f6dade;
+  color: #c1121f;
+}
+
+[data-brand-theme="villain"][data-bs-theme="dark"] .notification-item:hover {
+  background-color: #2a0a0d;
+  color: #ff8a94;
+}
+
+/* ---------- Fantasy: chiaro = Alleanza libera (smeraldo/oro/bianco), scuro = Mordor (nero/giallo, rosso appena accennato) ---------- */
+[data-brand-theme="fantasy"][data-bs-theme="light"] {
+  --bs-primary: #1f6d4c;
+  --bs-primary-rgb: 31, 109, 76;
+  --bs-primary-text-emphasis: #123d2b;
+  --bs-primary-bg-subtle: #cdeadb;
+  --bs-primary-border-subtle: #c9a227;
+  --bs-link-color: #1f6d4c;
+  --bs-link-color-rgb: 31, 109, 76;
+  --bs-link-hover-color: #c9a227;
+  --bs-link-hover-color-rgb: 201, 162, 39;
+  --bs-body-bg: #a3d9ba;
+  --bs-border-color: #c9a227;
+  --bs-border-color-translucent: rgba(201, 162, 39, 0.35);
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="dark"] {
+  --bs-primary: #e6b800;
+  --bs-primary-rgb: 230, 184, 0;
+  --bs-primary-text-emphasis: #ffdd55;
+  --bs-primary-bg-subtle: #1a1600;
+  --bs-primary-border-subtle: #4a0e0e;
+  --bs-link-color: #e6b800;
+  --bs-link-color-rgb: 230, 184, 0;
+  --bs-link-hover-color: #ffdd55;
+  --bs-link-hover-color-rgb: 255, 221, 85;
+  --bs-body-bg: #000000;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"] .btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #1f6d4c;
+  --bs-btn-border-color: #c9a227;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #164f38;
+  --bs-btn-hover-border-color: #c9a227;
+  --bs-btn-focus-shadow-rgb: 31, 109, 76;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #123d2b;
+  --bs-btn-active-border-color: #8a6d1d;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #1f6d4c;
+  --bs-btn-disabled-border-color: #1f6d4c;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="dark"] .btn-primary {
+  --bs-btn-color: #000;
+  --bs-btn-bg: #e6b800;
+  --bs-btn-border-color: #4a0e0e;
+  --bs-btn-hover-color: #000;
+  --bs-btn-hover-bg: #ffdd55;
+  --bs-btn-hover-border-color: #7a1717;
+  --bs-btn-focus-shadow-rgb: 230, 184, 0;
+  --bs-btn-active-color: #000;
+  --bs-btn-active-bg: #cc9e00;
+  --bs-btn-active-border-color: #4a0e0e;
+  --bs-btn-disabled-color: #000;
+  --bs-btn-disabled-bg: #e6b800;
+  --bs-btn-disabled-border-color: #4a0e0e;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"] .form-control:focus {
+  border-color: #c9a227;
+  box-shadow: 0 0 0 0.25rem rgba(201, 162, 39, 0.25);
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="dark"] .form-control:focus {
+  border-color: #e6b800;
+  box-shadow: 0 0 0 0.25rem rgba(230, 184, 0, 0.25);
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"] .notification-item:hover {
+  background-color: #d8ecdf;
+  color: #1f6d4c;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="dark"] .notification-item:hover {
+  background-color: #1a1600;
+  color: #ffdd55;
+  border-left: 2px solid #7a1717;
+}
+
+[data-brand-theme="fantasy"] body,
+[data-brand-theme="fantasy"] {
+  font-family: "Cinzel", serif;
+}
+
+/* Card profilo come una pergamena antica: sfondo a macchie d'invecchiamento,
+   bordo dorato, nastro-sigillo al posto della fascia colorata in alto. */
+[data-brand-theme="fantasy"][data-bs-theme="light"] .home-profile-card {
+  background:
+    radial-gradient(
+      circle at 18% 25%,
+      rgba(139, 108, 66, 0.14) 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 82% 75%,
+      rgba(139, 108, 66, 0.12) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 60% 15%,
+      rgba(101, 78, 41, 0.1) 0%,
+      transparent 30%
+    ),
+    linear-gradient(135deg, #f7edd3 0%, #eeddaf 45%, #f4e9c6 75%, #e9d6a4 100%);
+  box-shadow:
+    inset 0 0 20px rgba(101, 78, 41, 0.25),
+    0 2px 8px rgba(60, 45, 10, 0.15);
+  color: #3d2f12;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .home-profile-card
+  .bg-primary-subtle {
+  background: linear-gradient(90deg, #8a6d1d, #e6cd7c 50%, #8a6d1d) !important;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .home-profile-card
+  .text-secondary {
+  color: #6b5a33 !important;
+}
+
+/* Navbar verde elfico con icone e testo dorati */
+[data-brand-theme="fantasy"][data-bs-theme="light"] .navbar {
+  background: linear-gradient(180deg, #1f6d4c 0%, #164f38 100%) !important;
+  border-bottom: 2px solid #c9a227 !important;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"] .navbar .text-secondary,
+[data-brand-theme="fantasy"][data-bs-theme="light"] .navbar .text-body,
+[data-brand-theme="fantasy"][data-bs-theme="light"] .navbar .input-group-text {
+  color: #e6cd7c !important;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"] .navbar .bg-body-secondary {
+  background-color: rgba(230, 205, 124, 0.16) !important;
+  color: #e6cd7c !important;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .navbar
+  .form-control::placeholder {
+  color: rgba(230, 205, 124, 0.65);
+}
+
+/* Pulsante menu utente: stesso oro dell'Anello Unico (identico gradiente
+   di .avatar-ringed) invece del grigio chiaro di Bootstrap, che sul verde
+   elfico della navbar stonava. */
+[data-brand-theme="fantasy"][data-bs-theme="light"] .navbar .user-menu-toggle {
+  background: linear-gradient(135deg, #8a6d1d, #fff2b8 45%, #e6b800) !important;
+  border: 1px solid #3a2e05 !important;
+  color: #3a2e05 !important;
+  box-shadow: 0 0 8px rgba(230, 184, 0, 0.55);
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .navbar
+  .user-menu-toggle:hover,
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .navbar
+  .user-menu-toggle:focus,
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .navbar
+  .user-menu-toggle:active {
+  background: linear-gradient(135deg, #e6b800, #fff2b8 45%, #8a6d1d) !important;
+  color: #3a2e05 !important;
+}
+
+/* Cerchio interno (iniziali): stesso verde della navbar invece del grigio
+   di Bootstrap, come un castone incastonato nell'anello d'oro del pulsante. */
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .navbar
+  .user-menu-toggle
+  .avatar-initials {
+  background: linear-gradient(180deg, #1f6d4c 0%, #164f38 100%) !important;
+  color: #e6cd7c !important;
+}
+
+/* Bacheca delle news in stile medievale: asse di legno con avvisi di
+   pergamena appuntati, leggermente storti come fogli veri. */
+[data-brand-theme="fantasy"][data-bs-theme="light"] .news-board {
+  background-color: #7a4d22;
+  background-image: url("/textures/wood-grain.svg");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  border: 3px solid #4a3216;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 30px rgba(0, 0, 0, 0.45),
+    0 3px 10px rgba(0, 0, 0, 0.25);
+  padding: 4px 0 10px;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"] .news-board .card-title {
+  color: #f4e9c6;
   text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-size: 1.3rem;
 }
 
-body {
-  margin: 0;
+[data-brand-theme="fantasy"][data-bs-theme="light"] .news-board-item {
+  background: linear-gradient(135deg, #f7edd3, #ecdcae) !important;
+  border: 1px solid #c9a227 !important;
+  border-radius: 2px;
+  width: calc(100% - 48px);
+  margin: 14px auto;
+  box-shadow: 2px 3px 6px rgba(0, 0, 0, 0.35);
+  position: relative;
+  color: #3d2f12;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .news-board-item:nth-child(odd) {
+  transform: rotate(-1.4deg);
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .news-board-item:nth-child(even) {
+  transform: rotate(1.1deg);
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"] .news-board-item:hover {
+  transform: rotate(0deg) scale(1.02);
+  z-index: 1;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"] .news-board-item::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ff8a8a, #7a1717);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"] .news-board-item small {
+  color: #6b5a33 !important;
+}
+
+/* Composer e post del feed: pagine di diario, avorio con bordo dorato
+   sottile (niente macchie/rotazioni: si ripetono troppe volte nel feed). */
+[data-brand-theme="fantasy"][data-bs-theme="light"] .post-composer-card,
+[data-brand-theme="fantasy"][data-bs-theme="light"] .post-card {
+  background: linear-gradient(160deg, #faf3de, #f1e6c4) !important;
+  border: 1px solid #c9a227 !important;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .post-composer-card
+  .text-secondary,
+[data-brand-theme="fantasy"][data-bs-theme="light"] .post-card .text-secondary {
+  color: #6b5a33 !important;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .post-card
+  .post-action-btn {
+  color: #1f6d4c !important;
+}
+
+[data-brand-theme="fantasy"][data-bs-theme="light"]
+  .post-card
+  .post-action-btn.text-primary {
+  color: #a8841f !important;
+}
+
+/* Anello d'oro cesellato attorno all'avatar principale: un cerchio dorato
+   rotante dietro (spirito "Signore degli Anelli") più un bordo scuro netto
+   sopra per dare rilievo, senza appesantire i piccoli avatar del feed. */
+[data-brand-theme="fantasy"] .avatar-ringed {
+  position: relative;
+}
+
+[data-brand-theme="fantasy"] .avatar-ringed::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    #8a6d1d,
+    #fff2b8,
+    #e6b800,
+    #8a6d1d,
+    #fff2b8,
+    #e6b800,
+    #8a6d1d
+  );
+  animation: fantasy-ring-spin 6s linear infinite;
+  z-index: -1;
+}
+
+[data-brand-theme="fantasy"] .avatar-ringed::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid #3a2e05;
+  box-shadow:
+    inset 0 0 3px rgba(0, 0, 0, 0.6),
+    0 0 8px rgba(230, 184, 0, 0.55);
+}
+
+@keyframes fantasy-ring-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
+
+/* Polvere dorata per il tema fantasy: puntini generati e animati da GSAP
+   (FantasyDust.tsx) lungo curve casuali continue, non un pattern CSS
+   statico — vedi il componente per la logica di movimento. */
+.fantasy-dust-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.fantasy-firefly-dot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #ffe066;
+  box-shadow: 0 0 10px 2px rgba(230, 184, 0, 0.75);
+}
+
+/* Di notte la polvere dorata diventa lapilli, stesso giallo caldo di EvilEye */
+[data-brand-theme="fantasy"][data-bs-theme="dark"] .fantasy-firefly-dot {
+  background-color: #ffee86;
+  box-shadow: 0 0 10px 2px rgba(255, 238, 134, 0.75);
+}
+
+/* Card semi-trasparenti di notte, per lasciar intravedere l'occhio di sfondo.
+   Le "card" dell'app sono implementate in modo incoerente (componente Card di
+   react-bootstrap con classe .card, oppure semplici div con bg-body/bg-white),
+   quindi copriamo tutti i selettori coinvolti. .list-group-item serve per le
+   righe della sezione news: hanno un proprio sfondo bianco solido, distinto
+   dalla card esterna che le contiene. */
+[data-brand-theme="fantasy"][data-bs-theme="dark"] .card,
+[data-brand-theme="fantasy"][data-bs-theme="dark"] .bg-body,
+[data-brand-theme="fantasy"][data-bs-theme="dark"] .bg-white,
+[data-brand-theme="fantasy"][data-bs-theme="dark"] .list-group-item {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Anello 3D rotante ("LOTR-ish Ring" di J. Steinbach, adattato in CSS puro
+   senza Sass/jQuery): 20 fasce dorate impilate a incastro con transform 3D,
+   che ruotano lentamente mostrando una frase incisa lettera per lettera. */
+.lotr-ring-scene {
+  position: relative;
+  height: 210px;
+  margin: 4px 0 12px;
+  border-radius: 8px;
+  perspective: 200em;
+  perspective-origin: center center;
+}
+
+.lotr-ring-bearer-center {
+  position: absolute;
+  top: calc(50% - 35px);
+  left: calc(50% + 10px);
+  transform: translate(-50%, -50%) rotateX(-20deg);
+  transform-style: preserve-3d;
+}
+
+.lotr-ring-bearer {
+  font-size: 0;
+  height: 1em;
+  transform-style: preserve-3d;
+  /* Centro reale della circonferenza tracciata dalle 20 fasce (poligono
+     regolare, lato 1em): raggio = 1 / (2*sin(9°)) ≈ 3.196em, apotema
+     ≈ 3.156em. Il perno di rotazione va qui, non al centro del box piatto. */
+  transform-origin: 1.5em center 3.156em;
+  animation: lotr-ring-spin 15s linear infinite;
+}
+
+.lotr-ring {
+  font-size: 18px;
+  position: absolute;
+  top: 0;
+  left: 1em;
+  width: 1em;
+  white-space: nowrap;
+  display: inline-block;
+  backface-visibility: hidden;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  transform: rotateY(18deg);
+}
+
+.lotr-ring-top,
+.lotr-ring-text,
+.lotr-ring-bottom-1,
+.lotr-ring-bottom-2 {
+  width: 1em;
+  height: 1em;
+  line-height: 1em;
+  background-image: linear-gradient(
+    135deg,
+    #fff 0%,
+    #fffc84 17%,
+    #d4af37 33%,
+    #fffc84 67%,
+    #d4af37 83%,
+    #886300 100%
+  );
+  background-repeat: repeat;
+  background-size: 20em 5em;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.lotr-ring-text {
+  overflow: hidden;
+  background-position: calc(var(--i) * -1em) -2em;
+  text-indent: calc(var(--i) * -1em);
+  color: #d4af37;
+  letter-spacing: 0.15em;
+  font-family: "Cinzel", serif;
+  text-shadow:
+    -1px -1px 1px #fffc84,
+    1px 1px 1px #886300;
+}
+
+.lotr-ring-top {
+  position: relative;
+  height: 0.5em;
+  background-position: calc(var(--i) * -1em) -1.5em;
+  transform: rotateX(30deg);
+  transform-origin: center bottom;
+}
+
+.lotr-ring-bottom-1 {
+  position: relative;
+  height: 0.5em;
+  background-position: calc(var(--i) * -1em) -3em;
+  transform: rotateX(-30deg);
+  transform-origin: center top;
+}
+
+.lotr-ring-bottom-2 {
+  position: absolute;
+  left: 0;
+  bottom: -1.5em;
+  height: 1.5em;
+  background-position: calc(var(--i) * -1em) -3.5em;
+  transform: rotateX(-150deg) scaleY(1.2);
+  transform-origin: center top;
+}
+
+@keyframes lotr-ring-spin {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
   }
 }
-p {
-  margin: 0;
+
+[data-brand-theme="fantasy"] h1,
+[data-brand-theme="fantasy"] h2,
+[data-brand-theme="fantasy"] h3,
+[data-brand-theme="fantasy"] h4,
+[data-brand-theme="fantasy"] h5,
+[data-brand-theme="fantasy"] .navbar-brand,
+[data-brand-theme="fantasy"] .btn {
+  letter-spacing: 0.02em;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* ---------- Cyberpunk: neon caldo (rosso/giallo) in chiaro, freddo (viola/blu) in scuro ---------- */
+[data-brand-theme="cyberpunk"][data-bs-theme="light"] {
+  --bs-primary: #ff0044;
+  --bs-primary-rgb: 255, 0, 68;
+  --bs-primary-text-emphasis: #99002a;
+  --bs-primary-bg-subtle: #ffe0e8;
+  --bs-primary-border-subtle: #ff8aa8;
+  --bs-link-color: #b8860b;
+  --bs-link-color-rgb: 184, 134, 11;
+  --bs-link-hover-color: #8a6508;
+  --bs-link-hover-color-rgb: 138, 101, 8;
+  --bs-body-bg: #ffcc33;
+  --bs-body-bg-rgb: 255, 204, 51;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+[data-brand-theme="cyberpunk"][data-bs-theme="dark"] {
+  --bs-primary: #9d00ff;
+  --bs-primary-rgb: 157, 0, 255;
+  --bs-primary-text-emphasis: #d9a3ff;
+  --bs-primary-bg-subtle: #1c0630;
+  --bs-primary-border-subtle: #5c1a99;
+  --bs-link-color: #2b6bff;
+  --bs-link-color-rgb: 43, 107, 255;
+  --bs-link-hover-color: #6b9bff;
+  --bs-link-hover-color-rgb: 107, 155, 255;
+  --bs-body-bg: #050505;
+  --bs-body-bg-rgb: 5, 5, 5;
+}
+
+[data-brand-theme="cyberpunk"][data-bs-theme="light"] .btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #ff0044;
+  --bs-btn-border-color: #ff0044;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #c40036;
+  --bs-btn-hover-border-color: #c40036;
+  --bs-btn-focus-shadow-rgb: 255, 0, 68;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #a3002d;
+  --bs-btn-active-border-color: #a3002d;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #ff0044;
+  --bs-btn-disabled-border-color: #ff0044;
+}
+
+[data-brand-theme="cyberpunk"][data-bs-theme="dark"] .btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #9d00ff;
+  --bs-btn-border-color: #9d00ff;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #7a00c4;
+  --bs-btn-hover-border-color: #7a00c4;
+  --bs-btn-focus-shadow-rgb: 157, 0, 255;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #5c0099;
+  --bs-btn-active-border-color: #5c0099;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #9d00ff;
+  --bs-btn-disabled-border-color: #9d00ff;
+}
+
+[data-brand-theme="cyberpunk"][data-bs-theme="light"] .form-control:focus {
+  border-color: #ffe600;
+  box-shadow: 0 0 0 0.25rem rgba(255, 230, 0, 0.35);
+}
+
+[data-brand-theme="cyberpunk"][data-bs-theme="dark"] .form-control:focus {
+  border-color: #2b6bff;
+  box-shadow: 0 0 0 0.25rem rgba(43, 107, 255, 0.35);
+}
+
+[data-brand-theme="cyberpunk"][data-bs-theme="light"] .notification-item:hover {
+  background-color: #ffe0e8;
+  color: #99002a;
+}
+
+[data-brand-theme="cyberpunk"][data-bs-theme="dark"] .notification-item:hover {
+  background-color: #1c0630;
+  color: #d9a3ff;
+}
+
+[data-brand-theme="cyberpunk"] .nav-link-item:hover,
+[data-brand-theme="cyberpunk"] .nav-link-item.active {
+  color: var(--bs-primary) !important;
+}
+
+[data-brand-theme="cyberpunk"][data-bs-theme="light"] .bg-body,
+[data-brand-theme="cyberpunk"][data-bs-theme="light"] .card {
+  background-image: linear-gradient(135deg, #ffe680, #ffcc33 45%, #ff9500);
+}
+
+/* Banner in cima alla card profilo (fascia bg-primary-subtle sopra
+   l'avatar): nero invece del rosa chiaro, il gradiente di .card qui sopra
+   non la copre perché ha il suo bg-primary-subtle sopra. */
+[data-brand-theme="cyberpunk"][data-bs-theme="light"]
+  .home-profile-card
+  .bg-primary-subtle {
+  background-color: #141414 !important;
+  /* Punto luce basato sulla luminosità (bianco che sfuma nel nero), non su
+     una tinta: stesso ruolo dell'angolo chiaro nel gradiente giallo-arancio
+     qui sopra, ma leggibile anche senza percepire la differenza di colore. */
+  background-image: radial-gradient(
+    circle at 22% 25%,
+    rgba(255, 255, 255, 0.3),
+    transparent 60%
+  ) !important;
+}
+
+/* Pulsante menu utente in light: nero invece del bianco di default di
+   Bootstrap, per un tratto scuro che spezzi la tavolozza rosso/giallo. */
+[data-brand-theme="cyberpunk"][data-bs-theme="light"] .navbar .user-menu-toggle {
+  background-color: #141414 !important;
+  border-color: #141414 !important;
+  color: #fff !important;
+}
+
+/* Pallino con le iniziali dentro il pulsante menu utente: sfondo del colore
+   della navbar e lettere dello stesso colore delle altre icone di navbar,
+   invece del grigio chiaro di Bootstrap che stonava sul pill nero. */
+[data-brand-theme="cyberpunk"][data-bs-theme="light"]
+  .navbar
+  .user-menu-toggle
+  .avatar-initials {
+  background-color: var(--bs-body-bg) !important;
+  color: var(--bs-secondary-color) !important;
+}
+
+/* Barra di ricerca in light: più scura del grigio chiaro di Bootstrap,
+   che sul giallo/arancio della navbar si perdeva. */
+[data-brand-theme="cyberpunk"][data-bs-theme="light"] .navbar .bg-body-secondary {
+  background-color: #141414 !important;
+  color: #fff !important;
+}
+
+[data-brand-theme="cyberpunk"][data-bs-theme="light"]
+  .navbar
+  .form-control::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Pulsante menu utente in dark: stesso grigio della barra di ricerca invece
+   del bianco di default di Bootstrap, che sul nero cyberpunk stonava. */
+[data-brand-theme="cyberpunk"][data-bs-theme="dark"] .navbar .user-menu-toggle {
+  background-color: var(--bs-secondary-bg) !important;
+  border-color: var(--bs-border-color) !important;
+  color: var(--bs-body-color) !important;
+}
+
+/* Footer (link in fondo alla sidebar): testo bianco in dark, leggibile sopra
+   lo sfondo quasi nero invece del grigio scuro di .text-secondary. */
+[data-brand-theme="cyberpunk"][data-bs-theme="dark"] .app-footer .text-secondary {
+  color: #fff !important;
+}
+
+/* Footer in light: bianco invece del grigio chiaro di .text-secondary, che
+   sul giallo/arancio della pagina si leggeva a fatica. */
+[data-brand-theme="cyberpunk"][data-bs-theme="light"] .app-footer .text-secondary {
+  color: #fff !important;
+}
+
+/* Riquadro del logo in navbar: segue --bs-primary (rosso in light, viola in
+   dark) invece dello swatch fisso del theme picker, che in light restava
+   viola e stonava sul rosso/giallo. */
+[data-brand-theme="cyberpunk"] .navbar-logo-box {
+  background-color: var(--bs-primary) !important;
+}
+
+[data-brand-theme="cyberpunk"],
+[data-brand-theme="cyberpunk"] body {
+  font-family: "Rajdhani", sans-serif;
+}
+
+[data-brand-theme="cyberpunk"] h1,
+[data-brand-theme="cyberpunk"] h2,
+[data-brand-theme="cyberpunk"] h3,
+[data-brand-theme="cyberpunk"] h4,
+[data-brand-theme="cyberpunk"] h5,
+[data-brand-theme="cyberpunk"] h6,
+[data-brand-theme="cyberpunk"] .navbar-brand {
+  font-family: "Orbitron", sans-serif;
+}
+
+/* ---------- Horror: sangue e muschio marcio su nero ---------- */
+[data-brand-theme="horror"][data-bs-theme="light"] {
+  --bs-primary: #7a0d0d;
+  --bs-primary-rgb: 122, 13, 13;
+  --bs-primary-text-emphasis: #4a0606;
+  --bs-primary-bg-subtle: #dfe6d2;
+  --bs-primary-border-subtle: #7a8a5e;
+  --bs-link-color: #7a0d0d;
+  --bs-link-color-rgb: 122, 13, 13;
+  --bs-link-hover-color: #500707;
+  --bs-link-hover-color-rgb: 80, 7, 7;
+}
+
+[data-brand-theme="horror"][data-bs-theme="dark"] {
+  --bs-primary: #b3172f;
+  --bs-primary-rgb: 179, 23, 47;
+  --bs-primary-text-emphasis: #ff9aa8;
+  --bs-primary-bg-subtle: #1a2410;
+  --bs-primary-border-subtle: #3d4a1f;
+  --bs-link-color: #ff9aa8;
+  --bs-link-color-rgb: 255, 154, 168;
+  --bs-link-hover-color: #ffc2cc;
+  --bs-link-hover-color-rgb: 255, 194, 204;
+  --bs-body-bg: #0a0d06;
+}
+
+[data-brand-theme="horror"] .btn-primary {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: #7a0d0d;
+  --bs-btn-border-color: #7a0d0d;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #500707;
+  --bs-btn-hover-border-color: #500707;
+  --bs-btn-focus-shadow-rgb: 179, 23, 47;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #3a0505;
+  --bs-btn-active-border-color: #3a0505;
+  --bs-btn-disabled-color: #fff;
+  --bs-btn-disabled-bg: #7a0d0d;
+  --bs-btn-disabled-border-color: #7a0d0d;
+}
+
+[data-brand-theme="horror"] .form-control:focus {
+  border-color: #b3172f;
+  box-shadow: 0 0 0 0.25rem rgba(179, 23, 47, 0.25);
+}
+
+[data-brand-theme="horror"] .notification-item:hover {
+  background-color: #dfe6d2;
+  color: #7a0d0d;
+}
+
+[data-brand-theme="horror"][data-bs-theme="dark"] .notification-item:hover {
+  background-color: #1a2410;
+  color: #ff9aa8;
 }
